@@ -1,0 +1,35 @@
+_target_: agents.bc_gmm_agent.BC_GMM_Agent
+_recursive_: False
+
+model:
+  _target_: agents.models.gmm.bc_gmm.BC_GMM
+  input_dim: ${obs_dim}
+  hidden_dim: ${hidden_dim}
+  num_hidden_layers: ${num_hidden_layers}
+  mlp_output_dim: ${hidden_dim}
+  dropout: 0
+  activation: 'Mish'
+  use_spectral_norm: False
+  output_dim: ${action_dim} # output of GMM, not MLP
+  n_gaussians: 64
+  min_std: 0.0001
+  std_activation: exp
+  use_tanh_wrapped_distribution: False
+  low_noise_eval: True
+  device: ${device}
+
+trainset: ${trainset}
+valset: ${valset}
+
+optimization:
+  _target_: torch.optim.Adam
+  lr: 1e-4
+  weight_decay: 0
+
+train_batch_size: ${train_batch_size}
+val_batch_size: ${val_batch_size}
+num_workers: ${num_workers}
+epoch: ${epoch}
+device: ${device}
+scale_data: ${scale_data}
+eval_every_n_epochs: ${eval_every_n_epochs}

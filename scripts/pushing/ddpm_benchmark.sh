@@ -1,0 +1,11 @@
+python run.py --config-name=pushing_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=ddpm_agent \
+              agent_name=ddpm \
+              window_size=1 \
+              group=aligning_ddpm_seeds \
+              simulation.n_cores=10 \
+              simulation.n_contexts=30 \
+              simulation.n_trajectories_per_context=16 \
+              agents.model.model.t_dim=16 \
+              agents.model.n_timesteps=8

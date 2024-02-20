@@ -1,0 +1,10 @@
+python run.py --config-name=aligning_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=ddpm_encdec \
+              agent_name=ddpm_encdec \
+              window_size=10 \
+              group=ddpm_encdec_h1a10 \
+              agents.action_seq_size=10 \
+              agents.obs_seq_len=1 \
+              agents.model.model.action_seq_len=10 \
+              agents.model.model.obs_seq_len=1

@@ -1,0 +1,12 @@
+python run.py --config-name=sorting_6_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=beso_agent \
+              agent_name=beso \
+              window_size=5 \
+              group=sorting_6_beso_seeds \
+              simulation.n_cores=30 \
+              simulation.n_contexts=60 \
+              simulation.n_trajectories_per_context=20 \
+              agents.num_sampling_steps=16 \
+              agents.sigma_min=0.1 \
+              agents.sigma_max=1

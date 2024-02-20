@@ -1,0 +1,59 @@
+_target_: agents.bet_agent.BeT_Agent
+_recursive_: false
+
+model:
+  _target_: agents.bet_agent.BeT_Policy
+  _recursive_: false
+
+  visual_input: False
+  device: ${device}
+  model:
+    _target_: agents.models.bet.latent_generators.mingpt.MinGPT
+
+    discrete_input: false
+    input_dim: ${obs_dim}
+
+    vocab_size: 64 # ${action_bins}  # TBD by the discretization model.
+
+    # Architecture details
+    n_layer: ${n_layer}
+    n_head: ${n_head}
+    n_embd: ${n_embd}
+
+    block_size: ${window_size}  # Length of history/context
+    predict_offsets: True
+    offset_loss_scale: 1.0  # actions are very small
+    focal_loss_gamma: 2.0
+    action_dim: ${action_dim}
+
+  obs_encoder:
+    _target_: torch.nn.Identity
+    output_dim: ${obs_dim}
+
+action_ae:
+  _target_: agents.models.bet.action_ae.discretizers.k_means.KMeansDiscretizer
+  action_dim: ${action_dim}
+  device: ${device}
+  predict_offsets: True
+
+optimization:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.995]
+  eps: 1.0e-8
+  weight_decay: 0.1
+
+grad_norm_clip: 1.0
+
+trainset: ${trainset}
+valset: ${valset}
+
+train_batch_size: ${train_batch_size}
+val_batch_size: ${val_batch_size}
+num_workers: ${num_workers}
+epoch: ${epoch}
+device: ${device}
+scale_data: ${scale_data}
+window_size: ${window_size}
+eval_every_n_epochs: ${eval_every_n_epochs}
+

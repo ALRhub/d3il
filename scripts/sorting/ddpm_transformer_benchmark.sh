@@ -1,0 +1,10 @@
+python run.py --config-name=sorting_2_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=ddpm_transformer_agent \
+              agent_name=ddpm_transformer \
+              window_size=5 \
+              group=sorting_2_ddpm_transformer_seeds \
+              simulation.n_cores=10 \
+              simulation.n_contexts=60 \
+              simulation.n_trajectories_per_context=8 \
+              agents.model.n_timesteps=16

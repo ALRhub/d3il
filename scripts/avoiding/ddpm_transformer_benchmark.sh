@@ -1,0 +1,9 @@
+python run.py --config-name=avoiding_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=ddpm_transformer_agent \
+              agent_name=ddpm_transformer \
+              window_size=5 \
+              group=avoiding_ddpm_transformer_seeds \
+              simulation.n_cores=10 \
+              simulation.n_trajectories=480 \
+              agents.model.n_timesteps=8

@@ -1,0 +1,83 @@
+_target_: agents.gpt_bc_vision_agent.Gpt_Agent
+_recursive_: false
+
+model:
+  _target_: agents.gpt_bc_vision_agent.GptPolicy
+  _recursive_: false
+
+  visual_input: True
+  device: ${device}
+
+  model:
+    _target_: agents.models.transformer.gpt_policy.MinGPT
+
+    discrete_input: false
+    input_dim: 128
+
+    vocab_size: 0 # no clustering here
+
+    # Architecture details
+    n_layer: ${n_layer}
+    n_head: ${n_head}
+    n_embd: ${n_embd}
+
+    device: ${device}
+    block_size: ${window_size} # Length of history/context
+    action_dim: ${action_dim}
+
+  obs_encoder:
+    _target_: agents.models.vision.multi_image_obs_encoder.MultiImageObsEncoder
+    shape_meta: &shape_meta
+      # acceptable types: rgb, low_dim
+      obs:
+        agentview_image:
+          shape: [ 3, 96, 96 ]
+          type: rgb
+        in_hand_image:
+          shape: [ 3, 96, 96 ]
+          type: rgb
+    #        robot_ee_pos:
+    #          shape: [3]
+    #          type default: low_dim
+    #      robot0_eef_quat:
+    #        shape: [4]
+    #      robot0_gripper_qpos:
+    #        shape: [2]
+    #    action:
+    #      shape: [10]
+
+    rgb_model:
+      _target_: agents.models.vision.model_getter.get_resnet
+      input_shape: [3, 96, 96]
+      output_size: 64
+    resize_shape: null
+#    crop_shape: [ 84, 84 ]
+    # constant center crop
+    random_crop: False
+    use_group_norm: True
+    share_rgb_model: False
+    imagenet_norm: True
+
+#  obs_encoder:
+#    _target_: agents.models.common.agent_attention_encoder.AgentAttEncoder
+#    shape_meta: ${shape_meta}
+#    dim_embedding: 128
+
+trainset: ${trainset}
+valset: ${valset}
+
+optimization:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+window_size: ${window_size}
+train_batch_size: ${train_batch_size}
+val_batch_size: ${val_batch_size}
+num_workers: ${num_workers}
+epoch: ${epoch}
+device: ${device}
+scale_data: ${scale_data}
+eval_every_n_epochs: ${eval_every_n_epochs}

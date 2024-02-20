@@ -1,0 +1,10 @@
+python run.py --config-name=pushing_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=bc_gmm_agent \
+              agent_name=bc_gmm \
+              window_size=1 \
+              group=aligning_bc_gmm_seeds \
+              simulation.n_cores=30 \
+              simulation.n_contexts=30 \
+              simulation.n_trajectories_per_context=16 \
+              agents.model.n_gaussians=8

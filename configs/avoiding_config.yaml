@@ -1,0 +1,74 @@
+defaults:
+  - agents: bc_agent
+#  - override hydra/launcher: submitit_slurm
+
+agent_name: bc
+log_dir: logs/avoiding/
+
+data_directory: environments/dataset/data/avoiding/data
+
+# insert wandb here
+wandb:
+  entity: atalaydonat
+  project: d3il
+
+group: avoiding_${agent_name}_sweep
+
+hydra:
+  run:
+    dir: ${log_dir}/runs/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${log_dir}/sweeps/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}
+
+seed: 42
+
+# Network
+hidden_dim: 128
+num_hidden_layers: 6
+
+# transformer
+n_layer: 4
+n_head: 4
+n_embd: 72
+
+# Training
+train_batch_size: 1024
+val_batch_size: 1024
+num_workers: 4
+device: 'cpu'
+epoch: 1
+eval_every_n_epochs: 1
+scale_data: True
+
+# Environment
+obs_dim: 4
+action_dim: 2
+max_len_data: 200
+window_size: 5
+
+# Dataset
+trainset:
+  _target_: environments.dataset.avoiding_dataset.Avoiding_Dataset
+  data_directory: ${data_directory}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+
+valset:
+  _target_: environments.dataset.avoiding_dataset.Avoiding_Dataset
+  data_directory: ${data_directory}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+
+# Simulation
+simulation:
+  _target_: simulation.avoiding_sim.Avoiding_Sim
+  seed: ${seed}
+  device: ${device}
+  render: True
+  n_cores: 1
+  n_trajectories: 100

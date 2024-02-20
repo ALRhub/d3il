@@ -1,0 +1,9 @@
+python run.py --config-name=sorting_6_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=gpt_bc_agent \
+              agent_name=gpt_bc \
+              window_size=5 \
+              group=sorting_6_gpt_bc_seeds \
+              simulation.n_cores=60 \
+              simulation.n_contexts=60 \
+              simulation.n_trajectories_per_context=20

@@ -1,0 +1,61 @@
+_target_: agents.bc_agent.BCAgent
+_recursive_: false
+
+model:
+  _target_: agents.bc_agent.BCPolicy
+  _recursive_: false
+
+  visual_input: True
+  device: ${device}
+
+  model:
+    _target_: agents.models.common.mlp.ResidualMLPNetwork
+    input_dim: 128 
+    hidden_dim: 128
+    num_hidden_layers: 4
+    output_dim: ${action_dim}
+    dropout: 0
+    activation: 'Mish'
+    use_spectral_norm: false
+    use_norm: False
+    norm_style: 'BatchNorm'
+    device: ${device}
+
+  obs_encoder:
+    _target_: agents.models.vision.multi_image_obs_encoder.MultiImageObsEncoder
+    shape_meta: &shape_meta
+      obs:
+        agentview_image:
+          shape: [3, 96, 96]
+          type: rgb
+        in_hand_image:
+          shape: [3, 96, 96]
+          type: rgb
+
+    rgb_model:
+      _target_: agents.models.vision.model_getter.get_resnet
+      input_shape: [3, 96, 96]
+      output_size: 64
+    resize_shape: null
+    random_crop: False
+    use_group_norm: True
+    share_rgb_model: False
+    imagenet_norm: True
+
+trainset: ${trainset}
+valset: ${valset}
+
+optimization:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+train_batch_size: ${train_batch_size}
+val_batch_size: ${val_batch_size}
+num_workers: ${num_workers}
+epoch: ${epoch}
+device: ${device}
+scale_data: ${scale_data}
+eval_every_n_epochs: ${eval_every_n_epochs}

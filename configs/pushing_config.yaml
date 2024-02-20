@@ -1,0 +1,84 @@
+defaults:
+  - agents: bc_agent
+#  - override hydra/launcher: submitit_slurm
+
+agent_name: bc
+log_dir: logs/pushing/
+
+train_data_path: environments/dataset/data/pushing/train_files.pkl
+eval_data_path: environments/dataset/data/pushing/eval_files.pkl
+
+# insert wandb here
+wandb:
+  entity: atalaydonat
+  project: d3il-test
+
+group: pushing_${agent_name}_test
+
+hydra:
+  run:
+    dir: ${log_dir}/runs/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${log_dir}/sweeps/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}
+
+#  launcher:
+#    timeout_min: 2000
+#    name: pushing #${hydra.job.name}
+#    partition: accelerated
+##    gpus_per_node: 4
+#    additional_parameters: {"ntasks":1, "gres":gpu:4, "cpus-per-task":152}
+
+
+seed: 42
+
+# Network
+hidden_dim: 128
+num_hidden_layers: 6
+
+# transformer
+n_layer: 4
+n_head: 4
+n_embd: 72
+
+# Training
+train_batch_size: 1024
+val_batch_size: 1024
+num_workers: 4
+device: 'cpu'
+epoch: 4
+eval_every_n_epochs: 2
+scale_data: True
+
+# Environment
+obs_dim: 10
+action_dim: 2
+max_len_data: 512
+window_size: 5
+
+# Dataset
+trainset:
+  _target_: environments.dataset.pushing_dataset.Pushing_Dataset
+  data_directory: ${train_data_path}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+
+valset:
+  _target_: environments.dataset.pushing_dataset.Pushing_Dataset
+  data_directory: ${eval_data_path}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+
+# Simulation
+simulation:
+  _target_: simulation.pushing_sim.Pushing_Sim
+  seed: ${seed}
+  device: ${device}
+  render: True
+  n_cores: 1
+  n_contexts: 1
+  n_trajectories_per_context: 8

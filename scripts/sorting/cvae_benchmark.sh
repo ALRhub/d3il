@@ -1,0 +1,11 @@
+python run.py --config-name=sorting_2_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=cvae_agent \
+              agent_name=cvae \
+              window_size=1 \
+              group=sorting_2_cvae_seeds \
+              simulation.n_cores=10 \
+              simulation.n_contexts=600 \
+              simulation.n_trajectories_per_context=1 \
+              agents.model.encoder.latent_dim=24 \
+              agents.kl_loss_factor=38.87875603648996

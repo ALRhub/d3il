@@ -1,0 +1,11 @@
+python run.py --config-name=stacking_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=bet_mlp_agent \
+              agent_name=bet_mlp \
+              window_size=1 \
+              group=stacking_bet_mlp_seeds \
+              simulation.n_cores=60 \
+              simulation.n_contexts=60 \
+              simulation.n_trajectories_per_context=18 \
+              agents.model.vocab_size=64 \
+              agents.model.offset_loss_scale=1.0

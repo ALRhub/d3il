@@ -1,0 +1,82 @@
+defaults:
+  - agents: bc_agent
+
+agent_name: bc
+log_dir: logs/sorting/
+
+train_data_path: environments/dataset/data/sorting/4_boxes_train_files.pkl
+eval_data_path: environments/dataset/data/sorting/4_boxes_eval_files.pkl
+
+num_boxes: 4
+
+# insert wandb here
+wandb:
+  entity: atalaydonat
+  project: d3il
+
+group: sorting_${agent_name}
+
+hydra:
+  run:
+    dir: ${log_dir}/runs/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${log_dir}/sweeps/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}
+
+seed: 42
+
+# Network
+hidden_dim: 256
+num_hidden_layers: 8
+
+# transformer
+n_layer: 6
+n_head: 6
+n_embd: 120
+
+# Training
+train_batch_size: 1024
+val_batch_size: 1024
+num_workers: 4
+device: 'cuda'
+epoch: 200
+eval_every_n_epochs: 10
+scale_data: True
+
+# Environment
+obs_dim: 16
+action_dim: 2
+max_len_data: 600
+window_size: 1
+
+# Dataset
+trainset:
+  _target_: environments.dataset.sorting_dataset.Sorting_Dataset
+  data_directory: ${train_data_path}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+  num_boxes: ${num_boxes}
+
+valset:
+  _target_: environments.dataset.sorting_dataset.Sorting_Dataset
+  data_directory: ${eval_data_path}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+  num_boxes: ${num_boxes}
+
+# Simulation
+simulation:
+  _target_: simulation.sorting_sim.Sorting_Sim
+  seed: ${seed}
+  device: ${device}
+  render: False
+  n_cores: 10
+  n_contexts: 30
+  n_trajectories_per_context: 12
+  max_steps_per_episode: 700
+  if_vision: False
+  num_box: ${num_boxes}

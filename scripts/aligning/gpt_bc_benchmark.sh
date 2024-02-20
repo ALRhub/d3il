@@ -1,0 +1,9 @@
+python run.py --config-name=aligning_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=gpt_bc_agent \
+              agent_name=gpt_bc \
+              window_size=3 \
+              group=aligning_gpt_bc_seeds_window_3 \
+              simulation.n_cores=30 \
+              simulation.n_contexts=60 \
+              simulation.n_trajectories_per_context=8

@@ -1,0 +1,12 @@
+python run.py --config-name=stacking_config \
+              --multirun seed=0,1,2,3,4,5 \
+              agents=beso_agent \
+              agent_name=beso \
+              window_size=5 \
+              group=stacking_beso_sweep \
+              simulation.n_cores=30 \
+              simulation.n_contexts=60 \
+              simulation.n_trajectories_per_context=18 \
+              agents.num_sampling_steps=16 \
+              agents.sigma_min=0.01 \
+              agents.sigma_max=1

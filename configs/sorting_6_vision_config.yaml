@@ -1,0 +1,103 @@
+defaults:
+  - agents: bc_vision_agent
+#  - override hydra/launcher: submitit_slurm
+
+agent_name: bc_vision
+log_dir: logs/sorting/
+
+train_data_path: environments/dataset/data/sorting/6_boxes_train_files.pkl
+eval_data_path: environments/dataset/data/sorting/6_boxes_eval_files.pkl
+#data_directory: environments/dataset/data/sorting/4_boxes
+
+num_boxes: 6
+
+# insert wandb here
+wandb:
+  entity: ???
+  project: ???
+
+group: sorting_${agent_name}
+
+hydra:
+  run:
+    dir: ${log_dir}/runs/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: ${log_dir}/sweeps/${agent_name}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.override_dirname}
+#  launcher:
+#    timeout_min: 1500
+#    name: sorting_6 #${hydra.job.name}
+#    partition: accelerated
+##    gpus_per_node: 4
+#    additional_parameters: {"ntasks":1, "gres":gpu:4, "cpus-per-task":152}
+
+seed: 42
+
+# Network
+hidden_dim: 128
+num_hidden_layers: 4
+
+# transformer
+n_layer: 4
+n_head: 4
+n_embd: 72
+
+# Training
+train_batch_size: 512
+val_batch_size: 512
+num_workers: 2
+device: 'cuda'
+epoch: 100
+eval_every_n_epochs: 20
+scale_data: True
+
+# Environment
+obs_dim: 2
+action_dim: 2
+max_len_data: 1200
+window_size: 5
+
+# Dataset
+trainset:
+  _target_: environments.dataset.sorting_dataset.Sorting_Img_Dataset
+  data_directory: ${train_data_path}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+  num_boxes: ${num_boxes}
+
+valset:
+  _target_: environments.dataset.sorting_dataset.Sorting_Img_Dataset
+  data_directory: ${eval_data_path}
+  obs_dim: ${obs_dim}
+  action_dim: ${action_dim}
+  max_len_data: ${max_len_data}
+  window_size: ${window_size}
+  num_boxes: ${num_boxes}
+
+# sim during training
+train_simulation:
+  _target_: simulation.sorting_sim.Sorting_Sim
+  seed: ${seed}
+  device: ${device}
+  render: False
+  n_cores: 5
+  n_contexts: 30
+  n_trajectories_per_context: 1
+  max_steps_per_episode: 1200
+  if_vision: True
+  num_box: ${num_boxes}
+
+# Simulation
+simulation:
+  _target_: simulation.sorting_sim.Sorting_Sim
+  seed: ${seed}
+  device: ${device}
+  render: True
+  n_cores: 1
+  n_contexts: 3
+  n_trajectories_per_context: 3
+  max_steps_per_episode: 1200
+  if_vision: True
+  num_box: ${num_boxes}

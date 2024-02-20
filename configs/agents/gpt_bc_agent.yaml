@@ -1,0 +1,52 @@
+_target_: agents.gpt_bc_agent.Gpt_Agent
+_recursive_: false
+
+model:
+  _target_: agents.gpt_bc_agent.GptPolicy
+  _recursive_: false
+
+  visual_input: False
+  device: ${device}
+
+  model:
+    _target_: agents.models.transformer.gpt_policy.MinGPT
+
+    discrete_input: false
+    input_dim: ${obs_dim}
+
+    vocab_size: 0 # no clustering here
+
+    # Architecture details
+    n_layer: ${n_layer}
+    n_head: ${n_head}
+    n_embd: ${n_embd}
+
+    device: ${device}
+    block_size: ${window_size} # Length of history/context
+    action_dim: ${action_dim}
+
+  obs_encoder:
+    _target_: torch.nn.Identity
+    output_dim: ${obs_dim}
+
+#  obs_encoder:
+#    _target_: agents.models.common.agent_attention_encoder.AgentAttEncoder
+#    shape_meta: ${shape_meta}
+#    dim_embedding: 128
+
+trainset: ${trainset}
+valset: ${valset}
+
+optimization:
+  _target_: torch.optim.Adam
+  lr: 1e-4
+  weight_decay: 0
+
+window_size: ${window_size}
+train_batch_size: ${train_batch_size}
+val_batch_size: ${val_batch_size}
+num_workers: ${num_workers}
+epoch: ${epoch}
+device: ${device}
+scale_data: ${scale_data}
+eval_every_n_epochs: ${eval_every_n_epochs}

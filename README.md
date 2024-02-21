@@ -1,5 +1,18 @@
 # D3IL_Benchmark
 
+[Paper](https://openreview.net/forum?id=6pPYRXKPpw), [Project Page](https://alrhub.github.io/d3il-website/), [ICLR 2024](https://iclr.cc/)
+
+[Xiaogang Jia](https://xiaogangjia.github.io/Personal_Website/)<sup>1</sup><sup>2</sup>,
+[Denis Blessing](https://alr.iar.kit.edu/21_495.php)<sup>1</sup>,
+[Xinkai Jiang](https://alr.iar.kit.edu/21_500.php)<sup>1</sup><sup>2</sup>,
+[Moritz Reuss](https://mbreuss.github.io/)<sup>2</sup>,
+Atalay Donat<sup>1</sup>,
+[Rudolf Lioutikov](https://rudolf.intuitive-robots.net/)<sup>2</sup>,
+[Gerhard Neumann](https://alr.iar.kit.edu/21_65.php)<sup>1</sup>
+
+<sup>1</sup>Autonomous Learning Robots, Karlsruhe Institute of Technology
+<sup>2</sup>Intuitive Robots Lab, Karlsruhe Institute of Technology
+
 This project encompasses the D3IL Benchmark, comprising 7 robot learning tasks: Avoiding, Pushing,
 Aligning, Sorting, Stacking, Inserting, and Arranging. All these environments are implemented 
 using Mujoco and Gym. The [D3IL](environments/d3il) directory includes the robot controller along with the environment 

@@ -11,7 +11,14 @@ Atalay Donat<sup>1</sup>,
 [Gerhard Neumann](https://alr.iar.kit.edu/21_65.php)<sup>1</sup>
 
 <sup>1</sup>Autonomous Learning Robots, Karlsruhe Institute of Technology
+
 <sup>2</sup>Intuitive Robots Lab, Karlsruhe Institute of Technology
+
+<p align="center">
+
+  <img width="100.0%" src="figures/github_readme.gif">
+
+</p>
 
 This project encompasses the D3IL Benchmark, comprising 7 robot learning tasks: Avoiding, Pushing,
 Aligning, Sorting, Stacking, Inserting, and Arranging. All these environments are implemented 
@@ -19,11 +26,6 @@ using Mujoco and Gym. The [D3IL](environments/d3il) directory includes the robot
 implementations, while the [Agents](agents) directory provides 11 imitation learning methods encompassing 
 both state-based and image-based policies.
 
-<p align="center">
-
-  <img width="100.0%" src="figures/github_readme.gif">
-
-</p>
 
 ## Installation
 ```

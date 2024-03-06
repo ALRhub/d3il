@@ -1,0 +1,128 @@
+{
+    "os": "Linux-5.15.0-94-generic-x86_64-with-glibc2.31",
+    "python": "3.10.8",
+    "heartbeatAt": "2024-03-05T15:22:35.147875",
+    "startedAt": "2024-03-05T15:22:33.645682",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--config-name=avoiding_config",
+        "--multirun",
+        "seed=0,1,2,3,4,5",
+        "agents=bc_agent",
+        "agent_name=bc",
+        "window_size=1",
+        "group=avoiding_bc_seeds"
+    ],
+    "state": "running",
+    "program": "/home/david/CoRL_benchmark/code_refine/d3il/run.py",
+    "codePathLocal": null,
+    "codePath": "run.py",
+    "git": {
+        "remote": "git@github.com:ALRhub/d3il.git",
+        "commit": "fc36830a5eba29818d2a6226a3e197be358663e9"
+    },
+    "email": "jia266163@gmail.com",
+    "root": "/home/david/CoRL_benchmark/code_refine/d3il",
+    "host": "i53pc38",
+    "username": "david",
+    "executable": "/home/david/miniconda3/envs/d3il/bin/python",
+    "cpu_count": 8,
+    "cpu_count_logical": 16,
+    "cpu_freq": {
+        "current": 2212.0676249999997,
+        "min": 2200.0,
+        "max": 3600.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2195.854,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        },
+        {
+            "current": 2200.0,
+            "min": 2200.0,
+            "max": 3600.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 456.8854446411133,
+            "used": 391.45510482788086
+        }
+    },
+    "memory": {
+        "total": 62.73253631591797
+    }
+}

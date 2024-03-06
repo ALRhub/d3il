@@ -1,0 +1,14 @@
+[2024-03-06 10:24:02,249][root][INFO] - Loading Sorting Dataset
+[2024-03-06 10:24:02,255][root][INFO] - Loading Sorting Dataset
+[2024-03-06 10:24:02,264][agents.utils.scaler][INFO] - Datset Info: state min: [-2.38545705 -1.52318573 -2.54365313 -1.47282587] and max: [2.68850236 1.91139447 2.31635532 1.92205622], action min: [-1.83907939 -2.15521574] and max: [1.93457664 0.68739977]
+[2024-03-06 10:24:02,264][agents.utils.scaler][INFO] - Training dataset size: input (7305, 4) target (7305, 2)
+[2024-03-06 10:24:02,264][agents.base_agent][INFO] - The model has a total amount of 103346 parameters
+[2024-03-06 10:24:02,611][agents.ddpm_agent][INFO] - Epoch 0: Mean test mse is 1.0683338046073914
+[2024-03-06 10:24:02,617][agents.ddpm_agent][INFO] - New best test loss. Stored weights have been updated!
+[2024-03-06 10:24:02,766][agents.ddpm_agent][INFO] - Training done!
+[2024-03-06 10:24:02,769][agents.ddpm_agent][INFO] - Loaded pre-trained model parameters
+[2024-03-06 10:24:03,118][environments.d3il.d3il_sim.sims.mujoco][INFO] - No module named 'mujoco_py'
+[2024-03-06 10:24:03,118][environments.d3il.d3il_sim.sims.mujoco][INFO] - No mujoco py installed. Mujoco simulation is not available.
+[2024-03-06 10:24:03,120][environments.d3il.d3il_sim.sims.sl][INFO] - No module named 'py_at_broker'
+[2024-03-06 10:24:03,120][environments.d3il.d3il_sim.sims.sl][INFO] - No SL installed. SL simulation and control is not available.
+[2024-03-06 10:24:03,121][simulation.avoiding_sim][INFO] - Starting trained model evaluation

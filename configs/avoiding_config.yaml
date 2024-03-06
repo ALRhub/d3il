@@ -1,5 +1,5 @@
 defaults:
-  - agents: bc_agent
+  - agents: ddpm_agent
 #  - override hydra/launcher: submitit_slurm
 
 agent_name: bc
@@ -9,10 +9,10 @@ data_directory: environments/dataset/data/avoiding/data
 
 # insert wandb here
 wandb:
-  entity: atalaydonat
+  entity: davidjia
   project: d3il
 
-group: avoiding_${agent_name}_sweep
+group: avoiding_${agent_name}
 
 hydra:
   run:
@@ -36,7 +36,7 @@ n_embd: 72
 train_batch_size: 1024
 val_batch_size: 1024
 num_workers: 4
-device: 'cpu'
+device: 'cuda'
 epoch: 1
 eval_every_n_epochs: 1
 scale_data: True
@@ -45,7 +45,7 @@ scale_data: True
 obs_dim: 4
 action_dim: 2
 max_len_data: 200
-window_size: 5
+window_size: 1
 
 # Dataset
 trainset:

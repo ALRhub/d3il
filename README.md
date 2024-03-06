@@ -61,13 +61,10 @@ D3IL_Benchmark
 ```
 ### Download the dataset
 
-Donwload the zip file and extract the data into the folder `environments/dataset/`
+Donwload the zip file from `https://drive.google.com/file/d/1SQhbhzV85zf_ltnQ8Cbge2lsSWInxVa8/view?usp=drive_link`
 
-```
-cd environments/dataset/
-wget https://mega.nz/file/ZXkQjYxS#728-v_DDliocn1U84cpEtkHHw42XiX8L4vmvEA7OrQ0
-unzip -d data/
-```
+Extract the data into the folder `environments/dataset/data/`
+
 
 ### Reproduce the results
 

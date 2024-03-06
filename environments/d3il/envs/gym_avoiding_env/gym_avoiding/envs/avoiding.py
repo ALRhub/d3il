@@ -10,7 +10,7 @@ from environments.d3il.d3il_sim.sims.mj_beta.MjRobot import MjRobot
 from environments.d3il.d3il_sim.sims.mj_beta.MjFactory import MjFactory
 from environments.d3il.d3il_sim.sims import MjCamera
 
-from envs.gym_avoiding_env.gym_avoiding.envs.objects.avoiding_objects import get_obj_list, \
+from .objects.avoiding_objects import get_obj_list, \
     init_end_eff_pos, \
     get_obj_xy_list
 

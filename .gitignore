@@ -1,0 +1,14 @@
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+
+*~
+*.swp
+._*
+
+.idea/*
+
+logs/*
+
+wandb/*

@@ -68,9 +68,7 @@ class Pushing_Sim(BaseSim):
                 pred_action = env.robot_state()
                 fixed_z = pred_action[2:]
                 done = False
-                
-                
-                
+
                 while not done:
 
                     obs = np.concatenate((pred_action[:2], obs))

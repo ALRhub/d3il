@@ -27,7 +27,7 @@ def set_seed_everywhere(seed):
     random.seed(seed)
 
 
-@hydra.main(config_path="configs", config_name="avoiding_config.yaml")
+@hydra.main(config_path="configs", config_name="aligning_config.yaml")
 def main(cfg: DictConfig) -> None:
 
     # if cfg.seed in [0, 1]:

@@ -86,12 +86,12 @@ class BaseAgent(abc.ABC):
         """
         pass
      
-    @abc.abstractmethod
-    def train_vision_agent(self):
-        """
-        Main method to train the vision agent on the given train and test data
-        """
-        pass
+    # @abc.abstractmethod
+    # def train_vision_agent(self):
+    #     """
+    #     Main method to train the vision agent on the given train and test data
+    #     """
+    #     pass
 
     @abc.abstractmethod
     def train_step(self, state: torch.Tensor, action: torch.Tensor):

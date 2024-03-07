@@ -1,5 +1,5 @@
 defaults:
-  - agents: ddpm_agent
+  - agents: beso_agent
 #  - override hydra/launcher: submitit_slurm
 
 agent_name: bc
@@ -37,15 +37,15 @@ train_batch_size: 1024
 val_batch_size: 1024
 num_workers: 4
 device: 'cuda'
-epoch: 1
-eval_every_n_epochs: 1
+epoch: 10
+eval_every_n_epochs: 5
 scale_data: True
 
 # Environment
 obs_dim: 4
 action_dim: 2
 max_len_data: 200
-window_size: 1
+window_size: 5
 
 # Dataset
 trainset:

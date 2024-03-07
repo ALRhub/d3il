@@ -44,7 +44,7 @@ class Avoiding_Sim(BaseSim):
 
         for i in range(n_trajectories):
 
-            # agent.reset()
+            agent.reset()
 
             print(f'core {pid}, Rollout {i}')
 

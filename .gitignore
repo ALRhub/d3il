@@ -12,3 +12,13 @@ __pycache__
 logs/*
 
 wandb/*
+
+environments/dataset/data/aligning/all_data/*
+environments/dataset/data/avoiding/data/*
+environments/dataset/data/inserting/data_3/*
+environments/dataset/data/pushing/all_data/*
+environments/dataset/data/sorting/2_boxes/*
+environments/dataset/data/sorting/4_boxes/*
+environments/dataset/data/sorting/6_boxes/*
+environments/dataset/data/stacking/all_data/*
+environments/dataset/data/stacking/vision_data/*

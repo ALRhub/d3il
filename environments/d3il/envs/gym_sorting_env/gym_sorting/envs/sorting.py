@@ -220,7 +220,7 @@ class Sorting_Env(GymEnvWrapper):
         )
         robot = MjRobot(
             scene,
-            xml_path=d3il_path("./models/mj/robot/panda_rod.xml"),
+            xml_path=d3il_path("./models/mj/robot/panda_rod_invisible.xml"),
         )
         controller = robot.cartesianPosQuatTrackingController
 

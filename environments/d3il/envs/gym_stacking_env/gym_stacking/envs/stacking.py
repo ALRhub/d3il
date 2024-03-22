@@ -151,7 +151,7 @@ class CubeStacking_Env(GymEnvWrapper):
         )
         robot = MjRobot(
             scene,
-            xml_path=d3il_path("./models/mj/robot/panda.xml"),
+            xml_path=d3il_path("./models/mj/robot/panda_invisible.xml"),
         )
         controller = robot.jointTrackingController
 

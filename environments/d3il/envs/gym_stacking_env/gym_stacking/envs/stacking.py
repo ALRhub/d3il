@@ -330,9 +330,9 @@ class CubeStacking_Env(GymEnvWrapper):
 
     def step(self, action, gripper_width=None, desired_vel=None, desired_acc=None):
 
-        # j_pos = action[:7]
+        j_pos = action[:7]
         # j_vel = action[7:14]
-        # gripper_width = action[-1]
+        gripper_width = action[-1]
 
         if gripper_width > 0.075:
 
@@ -361,8 +361,8 @@ class CubeStacking_Env(GymEnvWrapper):
         # c_quat = euler2quat(action[3:6])
         # c_action = np.concatenate((c_pos, c_quat))
 
-        # self.controller.setSetPoint(action[:-1])#, desired_vel=desired_vel, desired_acc=desired_acc)
-        self.controller.setSetPoint(action)#, desired_vel=j_vel, desired_acc=desired_acc)
+        self.controller.setSetPoint(action[:-1])#, desired_vel=desired_vel, desired_acc=desired_acc)
+        # self.controller.setSetPoint(action)#, desired_vel=j_vel, desired_acc=desired_acc)
         self.controller.executeControllerTimeSteps(
             self.robot, self.n_substeps, block=False
         )

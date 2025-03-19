@@ -10,8 +10,8 @@ eval_data_path: environments/dataset/data/aligning/eval_files.pkl
 
 # insert wandb here
 wandb:
-  entity: ???
-  project: ???
+  entity: aaaa
+  project: aaa
   mode: disabled
 
 group: aligning_${agent_name}
@@ -45,7 +45,7 @@ train_batch_size: 64
 val_batch_size: 64
 num_workers: 4
 device: 'cuda'
-epoch: 4
+epoch: 200
 eval_every_n_epochs: 2
 scale_data: True
 

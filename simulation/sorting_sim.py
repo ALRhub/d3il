@@ -30,12 +30,17 @@ class Sorting_Sim(BaseSim):
             n_trajectories_per_context: int = 1,
             num_box: int = 2,
             if_vision: bool = False,
+            image_width: int = 96,
+            image_height: int = 96,
             max_steps_per_episode: int = 500
     ):
         super().__init__(seed, device, render, n_cores, if_vision)
 
         self.n_contexts = n_contexts
         self.n_trajectories_per_context = n_trajectories_per_context
+
+        self.image_width = image_width
+        self.image_height = image_height
 
         self.max_steps_per_episode = max_steps_per_episode
 
@@ -61,7 +66,7 @@ class Sorting_Sim(BaseSim):
         print(os.getpid(), cpu_set)
         assign_process_to_cpu(os.getpid(), cpu_set)
 
-        env = Sorting_Env(max_steps_per_episode=self.max_steps_per_episode, render=self.render, num_boxes=self.num_box, if_vision=self.if_vision)
+        env = Sorting_Env(max_steps_per_episode=self.max_steps_per_episode, render=self.render, num_boxes=self.num_box, if_vision=self.if_vision, image_width=self.image_width, image_height=self.image_height)
         env.start()
 
         random.seed(pid)

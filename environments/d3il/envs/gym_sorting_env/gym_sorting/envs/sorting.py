@@ -200,7 +200,9 @@ class Sorting_Env(GymEnvWrapper):
         interactive: bool = False,
         render: bool = True,
         num_boxes: int = 2,
-        if_vision: bool = False
+        if_vision: bool = False,
+        image_width: int = 96,
+        image_height: int = 96,
     ):
 
         sim_factory = MjFactory()
@@ -221,6 +223,8 @@ class Sorting_Env(GymEnvWrapper):
         robot = MjRobot(
             scene,
             xml_path=d3il_path("./models/mj/robot/panda_rod_invisible.xml"),
+            image_width=image_width,
+            image_height=image_height,
         )
         controller = robot.cartesianPosQuatTrackingController
 
@@ -246,7 +250,7 @@ class Sorting_Env(GymEnvWrapper):
         self.random_env = random_env
         self.manager = BlockContextManager(scene, index=0, num_boxes=num_boxes)
 
-        self.bp_cam = BPCageCam()
+        self.bp_cam = BPCageCam(width=image_width, height=image_height)
         self.inhand_cam = robot.inhand_cam
 
         self.scene.add_object(self.bp_cam)

@@ -22,3 +22,41 @@ environments/dataset/data/sorting/4_boxes/*
 environments/dataset/data/sorting/6_boxes/*
 environments/dataset/data/stacking/all_data/*
 environments/dataset/data/stacking/vision_data/*
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.tox/
+.cache/
+nosetests.xml
+coverage/
+*.cover
+.hypothesis/
+
+# Claude settings
+.claude/*
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE files
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.egg-info/

@@ -112,54 +112,22 @@ phase2:
   # --- Observation encoders: two cameras + robot state ---
   static_obs_dim: 128
   gripper_obs_dim: 64
+  # Vision encoder matched to the other baselines: ResNet18Conv (BatchNorm ->
+  # GroupNorm) + SpatialSoftmax(num_kp=32) + Linear(64), per camera.
   static_encoder:
-    _target_: ml_networks.EncoderConfig
-    backbone:
-      _target_: ml_networks.ConvNetConfig
-      channels: [32, 64, 64]
-      conv_cfgs:
-      - _target_: ml_networks.ConvConfig
-        kernel_size: 7
-        stride: 2
-        padding: 0
-        activation: Mish
-      - _target_: ml_networks.ConvConfig
-        kernel_size: 5
-        stride: 2
-        padding: 0
-        activation: Mish
-      - _target_: ml_networks.ConvConfig
-        kernel_size: 3
-        stride: 1
-        padding: 0
-        activation: Mish
-    full_connection:
-      _target_: ml_networks.SpatialSoftmaxConfig
-      is_argmax: true
+    _target_: agents.models.ebm_jax.config.ResNet18EncoderConfig
+    num_kp: 32
+    temperature: 1.0
+    feature_dim: 64
+    group_norm_divisor: 16
+    imagenet_norm: true
   gripper_encoder:
-    _target_: ml_networks.EncoderConfig
-    backbone:
-      _target_: ml_networks.ConvNetConfig
-      channels: [32, 64, 64]
-      conv_cfgs:
-      - _target_: ml_networks.ConvConfig
-        kernel_size: 7
-        stride: 2
-        padding: 0
-        activation: Mish
-      - _target_: ml_networks.ConvConfig
-        kernel_size: 5
-        stride: 2
-        padding: 0
-        activation: Mish
-      - _target_: ml_networks.ConvConfig
-        kernel_size: 3
-        stride: 1
-        padding: 0
-        activation: Mish
-    full_connection:
-      _target_: ml_networks.SpatialSoftmaxConfig
-      is_argmax: true
+    _target_: agents.models.ebm_jax.config.ResNet18EncoderConfig
+    num_kp: 32
+    temperature: 1.0
+    feature_dim: 64
+    group_norm_divisor: 16
+    imagenet_norm: true
   # robot state ("pos") encoder
   pos_input_dim: ${obs_dim}
   pos_obs_dim: 32

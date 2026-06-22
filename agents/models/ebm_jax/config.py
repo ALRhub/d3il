@@ -160,6 +160,29 @@ class EBMConfig:
 
 
 @dataclass
+class ResNet18EncoderConfig:
+    """Image encoder matching the D3IL baseline vision encoder.
+
+    Mirrors ``agents/models/vision`` (``MultiImageObsEncoder`` + robomimic
+    ``VisualCore``): a torchvision-style ResNet18 conv stack (BatchNorm replaced
+    by GroupNorm, no conv bias) followed by SpatialSoftmax keypoint pooling and a
+    final linear projection. Use this in place of an ``ml.EncoderConfig`` for
+    ``static_encoder`` / ``gripper_encoder`` to give the EBM the same vision
+    backbone as the other baselines. Built by ``policy_ebm._make_image_encoder``.
+    """
+    # number of SpatialSoftmax keypoints (robomimic default: 32 -> 32*2 feats)
+    num_kp: int = 32
+    # softmax temperature for the soft-argmax (robomimic default: 1.0)
+    temperature: float = 1.0
+    # output feature width (robomimic VisualCore feature_dimension: 64)
+    feature_dim: int = 64
+    # GroupNorm groups = channels // group_norm_divisor (baseline: //16)
+    group_norm_divisor: int = 16
+    # apply ImageNet normalisation, assuming inputs in [0, 1] (baseline: True)
+    imagenet_norm: bool = True
+
+
+@dataclass
 class EBMPolicyConfig:
     """Top-level config for the two-phase EBM policy system.
 

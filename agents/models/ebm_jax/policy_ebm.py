@@ -146,14 +146,23 @@ class _PooledEncoder(nnx.Module):
 
 
 def _make_image_encoder(cfg, obs_shape_hwc, enc_cfg, *, rngs):
-    """Construct an image encoder. Only the legacy ``_PooledEncoder`` (the
-    ml-networks conv encoder) path is ported into D3IL; the ACT / affordance
-    ResNet encoders are vapo-specific and not needed for the benchmark."""
+    """Construct an image encoder.
+
+    Two paths are supported in the D3IL port:
+      * ``ResNet18EncoderConfig`` -> a ResNet18 + SpatialSoftmax encoder that
+        matches the other (PyTorch) baselines' vision backbone.
+      * ``ml.EncoderConfig`` -> the legacy ``_PooledEncoder`` (ml-networks conv
+        encoder).
+    The ACT / affordance ResNet encoders are vapo-specific and not ported."""
     if getattr(cfg, "use_act_encoder", False):
         raise NotImplementedError(
             "use_act_encoder is not supported in the D3IL EBM port; use the "
-            "ml-networks conv encoder (EncoderConfig) instead."
+            "ml-networks conv encoder (EncoderConfig) or ResNet18EncoderConfig."
         )
+    from .config import ResNet18EncoderConfig
+    if isinstance(enc_cfg, ResNet18EncoderConfig):
+        from .resnet_encoder import ResNet18Encoder
+        return ResNet18Encoder(obs_shape_hwc, enc_cfg, rngs=rngs)
     return _PooledEncoder(obs_shape_hwc, enc_cfg, rngs=rngs)
 
 

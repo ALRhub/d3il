@@ -69,6 +69,6 @@ simulation:
   _target_: simulation.avoiding_sim.Avoiding_Sim
   seed: ${seed}
   device: ${device}
-  render: True
+  render: False
   n_cores: 1
   n_trajectories: 100

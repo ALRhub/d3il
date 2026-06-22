@@ -78,7 +78,7 @@ simulation:
   _target_: simulation.pushing_sim.Pushing_Sim
   seed: ${seed}
   device: ${device}
-  render: True
+  render: False
   n_cores: 1
   n_contexts: 1
   n_trajectories_per_context: 8

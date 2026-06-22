@@ -77,7 +77,7 @@ simulation:
   _target_: simulation.stacking_sim.Stacking_Sim
   seed: ${seed}
   device: ${device}
-  render: True
+  render: False
   n_cores: 1
   n_contexts: 5
   n_trajectories_per_context: 1

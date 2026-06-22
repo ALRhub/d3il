@@ -94,7 +94,7 @@ simulation:
   _target_: simulation.sorting_sim.Sorting_Sim
   seed: ${seed}
   device: ${device}
-  render: True
+  render: False
   n_cores: 1
   n_contexts: 3
   n_trajectories_per_context: 3

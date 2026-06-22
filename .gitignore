@@ -13,6 +13,7 @@ logs/*
 
 wandb/*
 
+**/*.zip
 environments/dataset/data/aligning/all_data/*
 environments/dataset/data/avoiding/data/*
 environments/dataset/data/inserting/data_3/*

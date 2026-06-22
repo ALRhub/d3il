@@ -41,14 +41,32 @@ def main(cfg: DictConfig) -> None:
     set_seed_everywhere(cfg.seed)
 
     # init wandb logger and config from hydra path
-    wandb.config = OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True)
+    # Tags: method (agent_name, from <name>_benchmark.sh) / modality / task / seed
+    from hydra.core.hydra_config import HydraConfig
+    config_name = HydraConfig.get().job.config_name          # e.g. "aligning_vision_config"
+    task = config_name.replace("_vision_config", "").replace("_config", "")
+    modality = "image"                                       # run_vision.py drives the image-based benchmarks
+    tags = [str(cfg.agent_name), f"task:{task}", f"modality:{modality}", f"seed:{cfg.seed}"]
 
+    wandb_config = OmegaConf.to_container(cfg, resolve=True, throw_on_missing=False)
+    # Author placeholders in the repo configs -> fall back to your own entity.
+    entity = OmegaConf.select(cfg, "wandb.entity", default=None)
+    if entity in (None, "", "???", "davidjia", "atalaydonat"):
+        entity = os.environ.get("WANDB_ENTITY")  # None => your default wandb entity
+    project = os.environ.get("WANDB_PROJECT") or OmegaConf.select(cfg, "wandb.project", default=None)
+    if project in (None, "", "???"):
+        project = "d3il"
+    mode = os.environ.get("WANDB_MODE") or OmegaConf.select(cfg, "wandb.mode", default="online")
+
+    wandb.config = wandb_config
     run = wandb.init(
-        project=cfg.wandb.project,
-        entity=cfg.wandb.entity,
+        project=project,
+        entity=entity,
         group=cfg.group,
-        mode="disabled",
-        config=wandb.config
+        name=f"{cfg.agent_name}_{task}_seed{cfg.seed}",
+        tags=tags,
+        mode=mode,
+        config=wandb_config,
     )
 
     agent = hydra.utils.instantiate(cfg.agents)

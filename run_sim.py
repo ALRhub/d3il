@@ -31,7 +31,6 @@ def main(cfg: DictConfig) -> None:
     run = wandb.init(
         project=cfg.wandb.project,
         entity=cfg.wandb.entity,
-        mode="disabled",
         config=wandb.config
     )
 

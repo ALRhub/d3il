@@ -16,10 +16,6 @@ from torch.nn import functional as F
 import math
 import logging
 
-import IPython
-
-e = IPython.embed
-
 logger = logging.getLogger(__name__)
 
 

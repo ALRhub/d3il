@@ -95,6 +95,10 @@ We offer a unified interface for integrating new algorithms:
 - Add your agent config file in `configs/agents/`
 - Add a training scripts in `scripts/aligning/`
 
+### Visualizing & comparing methods
+To visually compare trained methods on the *avoiding* task (end-effector
+trajectory plots and rollout videos), see [docs/visualization.md](docs/visualization.md).
+
 ### Creating Custom Tasks
 Our simulation system, built on Mujoco and Gym, allows the creation of new tasks. In order to create new tasks, please 
 refer to the [D3il_Guide](environments/d3il/README.md)

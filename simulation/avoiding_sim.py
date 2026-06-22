@@ -70,7 +70,10 @@ class Avoiding_Sim(BaseSim):
                 c_pos.append(env.robot.current_c_pos)
 
             c_pos = torch.tensor(np.array(c_pos))[:, :2]
-            robot_c_pos[pid * n_trajectories + i, :c_pos.shape[0], :] = c_pos
+            # Episodes can run longer than the fixed buffer width (rollouts go
+            # up to max_steps_per_episode); clip so the assignment never errors.
+            length = min(c_pos.shape[0], robot_c_pos.shape[1])
+            robot_c_pos[pid * n_trajectories + i, :length, :] = c_pos[:length]
 
             mode_encoding[pid * n_trajectories + i, :] = torch.tensor(info[0])
             successes[pid * n_trajectories + i] = torch.tensor(info[1])
@@ -84,7 +87,9 @@ class Avoiding_Sim(BaseSim):
 
         log.info('Starting trained model evaluation')
 
-        robot_c_pos = torch.zeros([self.n_trajectories, 150, 2]).share_memory_()
+        # 250 matches the env's max_steps_per_episode (+1 for the initial pos);
+        # the assignment in eval_agent also clips defensively against overflow.
+        robot_c_pos = torch.zeros([self.n_trajectories, 251, 2]).share_memory_()
 
         mode_encoding = torch.zeros([self.n_trajectories, 9]).share_memory_()
         successes = torch.zeros(self.n_trajectories).share_memory_()

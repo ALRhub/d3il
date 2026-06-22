@@ -1,6 +1,6 @@
 python run.py --config-name=sorting_2_config \
               --multirun seed=0,1,2,3,4,5 \
-              agents=ddpm_encdec \
+              agents=ddpm_encdec_agent \
               agent_name=ddpm_encdec \
               window_size=8 \
               group=sorting_2_ddpm_encdec_seeds \

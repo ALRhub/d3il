@@ -2,6 +2,15 @@ import os
 import logging
 import random
 
+# Silence gym's noisy import-time "upgrade to Gymnasium" notice (a raw print to
+# stderr keyed by version in gym_notices; not a warnings.warn, so it can't be
+# filtered). Must run before `import gym`.
+try:
+    import gym_notices.notices as _gym_notices
+    _gym_notices.notices = {}
+except Exception:
+    pass
+
 import hydra
 import numpy as np
 from tqdm import tqdm
@@ -63,7 +72,7 @@ def main(cfg: DictConfig) -> None:
         project=project,
         entity=entity,
         group=cfg.group,
-        name=f"{cfg.agent_name}_{task}_seed{cfg.seed}",
+        name=f"{cfg.agent_name}_{task}",
         tags=tags,
         mode=mode,
         config=wandb_config,

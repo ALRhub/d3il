@@ -15,7 +15,7 @@ import numpy as np
 from einops import rearrange
 from flax import nnx
 
-from .config import UNetConfig, TransformerConfig, PosEmbConfig, DiTConfig, RNNConfig
+from .config import UNetConfig, TransformerConfig, PosEmbConfig, DiTConfig, RNNConfig, MLPPolicyConfig
 
 
 # ---------------------------------------------------------------------------
@@ -904,6 +904,41 @@ class DiT(nnx.Module):
             var = (var + 1) / 2
             x = jnp.concatenate([x, var], axis=-1)
         return x
+
+
+# ---------------------------------------------------------------------------
+# MLP velocity field (plain-MLP phase-1, mirrors the toy FMModel)
+# ---------------------------------------------------------------------------
+
+class MLPVelocity(nnx.Module):
+    """Plain-MLP velocity field ``v_theta(t, x)`` over a flattened action seq.
+
+    Mirrors ``FMModel`` in ``vapo/scripts/toy_compare_fm_ebm.py``: the action
+    sequence ``(B, T, D)`` is flattened, the (raw) flow time ``t`` is
+    concatenated, and a small ``mlj.MLPLayer`` regresses the flattened velocity.
+    The call signature ``(t, x, cond)`` matches DiT/UNet so the EBMPolicy flow
+    code (denoise / invert / phase-1 loss) is used unchanged.
+    """
+
+    def __init__(self, cfg: MLPPolicyConfig, *, rngs: nnx.Rngs):
+        self.horizon = cfg.horizon
+        self.input_dim = cfg.input_dim
+        flat = cfg.horizon * cfg.input_dim
+        mlp_cfg = ml.MLPConfig(
+            hidden_dim=cfg.hidden_dim,
+            output_activation=cfg.output_activation,
+            n_layers=cfg.n_layers,
+            linear_cfg=ml.LinearConfig(activation=cfg.activation),
+        )
+        # input = flattened x (flat) + raw scalar time (1); unconditional.
+        self.mlp = mlj.MLPLayer(flat + 1, flat, mlp_cfg, rngs=rngs)
+
+    def __call__(self, t: jax.Array, x: jax.Array, cond=None) -> jax.Array:
+        B = x.shape[0]
+        xf = x.reshape(B, -1)
+        tt = jnp.broadcast_to(t, (B,)).reshape(B, 1)
+        out = self.mlp(jnp.concatenate([xf, tt], axis=-1))
+        return out.reshape(B, self.horizon, self.input_dim)
 
 
 # ---------------------------------------------------------------------------

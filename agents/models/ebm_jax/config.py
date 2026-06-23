@@ -133,6 +133,24 @@ class DiTConfig:
 
 
 @dataclass
+class MLPPolicyConfig:
+    """Plain-MLP velocity field for phase-1 flow matching.
+
+    Mirrors the toy ``FMModel`` in ``vapo/scripts/toy_compare_fm_ebm.py``: the
+    action sequence is flattened and a small MLP regresses the velocity. Use
+    this (instead of ``DiTConfig`` / ``UNetConfig``) for a both-phases-MLP EBM
+    policy. ``cond_step`` is kept for interface symmetry (unconditional here).
+    """
+    input_dim: int
+    horizon: int
+    cond_step: int = 0
+    hidden_dim: int = 256
+    n_layers: int = 3
+    activation: str = "SiLU"
+    output_activation: str = "Identity"
+
+
+@dataclass
 class EBMConfig:
     """Configuration for the Energy-Based Model noise predictor."""
     arch: Literal["mlp", "transformer"] = "mlp"

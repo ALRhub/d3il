@@ -53,6 +53,14 @@ def _to_jnp(t) -> jnp.ndarray:
 class EBM_JAX_Agent(BaseAgent):
     """Two-phase EBM policy agent for the D3IL benchmark (state or vision)."""
 
+    # Upper bound on the EBM training batch when in-batch-inverted InfoNCE is
+    # used (its candidate count scales as O(B^2); larger batches OOM the GPU).
+    # The phase-2 train step also backprops through the in-batch-inverted
+    # negatives (invert_num_steps flow steps x the DiT) and langevin refinement,
+    # so the backward tape is large; 64 keeps the step's peak well within a
+    # single GPU while still giving 63 in-batch negatives.
+    _MAX_EBM_BATCH = 64
+
     def __init__(
         self,
         phase1: DictConfig,
@@ -92,15 +100,58 @@ class EBM_JAX_Agent(BaseAgent):
         self.trainset = hydra.utils.instantiate(trainset)
         self.valset = hydra.utils.instantiate(valset)
 
-        # pin_memory is unnecessary: batches are copied to host for JAX anyway.
-        dl_kwargs = dict(num_workers=num_workers, pin_memory=False)
-        if num_workers > 0:
-            dl_kwargs["prefetch_factor"] = 10
+        # Keep the instantiated config dataclasses so the models can be rebuilt
+        # after pickling (spawn-based multiprocess evaluation).
+        self._phase1_config = hydra.utils.instantiate(phase1)
+        self._phase2_config = hydra.utils.instantiate(phase2)
+
+        # The transformer EBM only makes sense over a multi-step sequence. For
+        # window_size==1 (single-step obs/action) a transformer over length-1
+        # sequences is unnecessary, so fall back to the MLP energy model.
+        if (window_size <= 1 and self._phase2_config.ebm is not None
+                and getattr(self._phase2_config.ebm, "arch", "mlp") == "transformer"):
+            self._phase2_config.ebm.arch = "mlp"
+            log.info("window_size<=1: using MLP EBM (transformer not needed)")
+
+        # The phase-2 InfoNCE loss with in-batch-inverted negatives feeds the
+        # energy net O(B^2) candidate sequences per step (B*(B-1) in-batch
+        # negatives x sequence tokens). The dataset-default batch (e.g. 1024) is
+        # tuned for the cheap MLP baselines and explodes the EBM to tens of GB
+        # (OOM). Cap the EBM batch; in-batch contrastive only needs a moderate
+        # batch (the batch *is* the negative pool), and phase-1 flow matching is
+        # unaffected in quality by a smaller batch.
+        ebm_cfg = self._phase2_config.ebm
+        if (ebm_cfg is not None
+                and getattr(ebm_cfg, "loss_type", "ce") == "infonce"
+                and getattr(ebm_cfg, "infonce_use_inbatch_inverted", False)
+                and train_batch_size > self._MAX_EBM_BATCH):
+            log.warning(
+                "EBM(jax): capping batch_size %d -> %d for the in-batch-inverted "
+                "InfoNCE EBM (O(B^2) candidates would OOM the GPU).",
+                train_batch_size, self._MAX_EBM_BATCH,
+            )
+            train_batch_size = self._MAX_EBM_BATCH
+            val_batch_size = min(val_batch_size, self._MAX_EBM_BATCH)
+
+        # JAX is multithreaded. The torch DataLoader's default Linux worker
+        # start method is os.fork(), and forking a process that already runs
+        # JAX's threads deadlocks (the os.fork()/JAX RuntimeWarning) -- training
+        # hangs at the first batch. Force single-process loading (num_workers=0);
+        # these datasets are in-memory so the throughput cost is negligible, and
+        # GPU compute dominates anyway. pin_memory is pointless (batches are
+        # copied to host for JAX regardless).
+        if num_workers != 0:
+            log.warning(
+                "EBM(jax): forcing num_workers=0 (was %d) to avoid the JAX/os.fork() "
+                "DataLoader deadlock.", num_workers,
+            )
         self.train_dataloader = torch.utils.data.DataLoader(
-            self.trainset, batch_size=train_batch_size, shuffle=True, **dl_kwargs,
+            self.trainset, batch_size=train_batch_size, shuffle=True,
+            num_workers=0, pin_memory=False,
         )
         self.test_dataloader = torch.utils.data.DataLoader(
-            self.valset, batch_size=val_batch_size, shuffle=False, **dl_kwargs,
+            self.valset, batch_size=val_batch_size, shuffle=False,
+            num_workers=0, pin_memory=False,
         )
 
         self.scaler = Scaler(
@@ -109,10 +160,6 @@ class EBM_JAX_Agent(BaseAgent):
             scale_data, device,
         )
 
-        # Keep the instantiated config dataclasses so the models can be rebuilt
-        # after pickling (spawn-based multiprocess evaluation).
-        self._phase1_config = hydra.utils.instantiate(phase1)
-        self._phase2_config = hydra.utils.instantiate(phase2)
         self._build_models()
 
         self.eval_model_name = "eval_best_ebm_jax.pkl"
@@ -134,8 +181,17 @@ class EBM_JAX_Agent(BaseAgent):
         self.static_context = deque(maxlen=self.obs_length)
         self.gripper_context = deque(maxlen=self.obs_length)
 
+        # Number of GPUs jax can see (used to spread spawn-based eval workers
+        # across devices in __setstate__, so n_cores>1 workers don't all pile
+        # onto GPU 0 and OOM). 0 when running on CPU.
+        try:
+            self._n_gpus = jax.local_device_count() if jax.default_backend() == "gpu" else 0
+        except Exception:
+            self._n_gpus = 0
+
         n_params = sum(int(np.prod(x.shape)) for x in jax.tree.leaves(self.phase2_model._params))
-        log.info("EBM (phase2) trainable parameters: {} (vision={})".format(n_params, self.vision))
+        log.info("EBM (phase2) trainable parameters: {} (vision={}, gpus={})".format(
+            n_params, self.vision, self._n_gpus))
         try:
             wandb.log({"model parameters": n_params})
         except Exception:
@@ -395,6 +451,17 @@ class EBM_JAX_Agent(BaseAgent):
     def __setstate__(self, state):
         saved = state.pop("_saved_weights", None)
         self.__dict__.update(state)
+        # This runs in each spawn-based simulation worker. Pin the worker to a
+        # single GPU (round-robin) BEFORE EBMPolicy() below initializes a JAX
+        # CUDA context, so many eval workers spread across the available GPUs
+        # instead of all contending on GPU 0. Respects any user-set
+        # CUDA_VISIBLE_DEVICES (round-robins within the allowed subset).
+        n_gpus = getattr(self, "_n_gpus", 0)
+        if n_gpus and n_gpus > 1:
+            cvd = os.environ.get("CUDA_VISIBLE_DEVICES")
+            visible = cvd.split(",") if cvd else [str(i) for i in range(n_gpus)]
+            if len(visible) > 1:
+                os.environ["CUDA_VISIBLE_DEVICES"] = visible[os.getpid() % len(visible)]
         self.phase2_model = EBMPolicy(self._phase2_config)
         self.phase1_model = None
         if saved is not None:

@@ -39,10 +39,12 @@ from .backbone import (
     DiT,
     EnergyModel,
     EnergyTransformer,
+    MLPVelocity,
 )
 from .config import (
     DiTConfig,
     EBMPolicyConfig,
+    MLPPolicyConfig,
     UNetConfig,
 )
 from .ema import NnxEMA
@@ -335,8 +337,15 @@ class EBMPolicy(JaxModuleBase):
                     cfg.pred_obs_action, goal_cond_step=0, pred_variance=False,
                     cfg=cfg.policy, rngs=rngs,
                 )
+            elif isinstance(cfg.policy, MLPPolicyConfig):
+                # Plain-MLP velocity field (both-phases-MLP variant).
+                if self._sep_grip:
+                    cfg.policy.input_dim = self._flow_action_dim
+                self.policy = MLPVelocity(cfg.policy, rngs=rngs)
             else:
-                raise ValueError(f"EBMPolicy supports UNetConfig or DiTConfig, got {type(cfg.policy)}")
+                raise ValueError(
+                    f"EBMPolicy supports UNetConfig, DiTConfig or MLPPolicyConfig, "
+                    f"got {type(cfg.policy)}")
 
             assert cfg.framework_cfg is not None
             self.framework, self.is_fm = _make_framework(cfg.framework_cfg)

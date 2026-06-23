@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import wandb
 
-from simulation.base_sim import BaseSim
+from simulation.base_sim import BaseSim  # pins MUJOCO_GL=egl on import
 
 log = logging.getLogger(__name__)
 
@@ -24,13 +24,38 @@ class Avoiding_Sim(BaseSim):
             device: str,
             render: bool,
             n_cores: int = 1,
-            n_trajectories: int = 30
+            n_trajectories: int = 30,
+            # --- visualisation hooks (all optional; default = current behaviour) ---
+            agent_name: str = "agent",        # used to name saved artifacts per method
+            save_traj_dir: str = None,        # if set, dump end-effector trajectories (.npz)
+            record_video_dir: str = None,     # if set, render rollout videos (.mp4)
+            record_n_videos: int = 0,         # number of rollouts to record
+            record_backend: str = "egl",   # deprecated/ignored: rendering is always EGL
+            record_size: int = 480,           # rendered frame size (square)
     ):
         super().__init__(seed, device, render, n_cores)
 
         self.n_trajectories = n_trajectories
+        self.agent_name = agent_name
+        # Hydra chdir's into a per-run dir, so resolve relative output dirs
+        # against the original launch cwd -> all methods share one location.
+        self.save_traj_dir = self._abs_dir(save_traj_dir)
+        self.record_video_dir = self._abs_dir(record_video_dir)
+        self.record_n_videos = record_n_videos
+        self.record_backend = record_backend
+        self.record_size = record_size
 
-    def eval_agent(self, agent, n_trajectories, mode_encoding, successes, robot_c_pos, pid, cpu_set):
+    @staticmethod
+    def _abs_dir(path):
+        if path is None or os.path.isabs(path):
+            return path
+        try:
+            from hydra.utils import get_original_cwd
+            return os.path.join(get_original_cwd(), path)
+        except Exception:
+            return os.path.abspath(path)
+
+    def eval_agent(self, agent, n_trajectories, mode_encoding, successes, robot_c_pos, traj_lens, pid, cpu_set):
 
         print(os.getpid(), cpu_set)
         assign_process_to_cpu(os.getpid(), cpu_set)
@@ -74,6 +99,7 @@ class Avoiding_Sim(BaseSim):
             # up to max_steps_per_episode); clip so the assignment never errors.
             length = min(c_pos.shape[0], robot_c_pos.shape[1])
             robot_c_pos[pid * n_trajectories + i, :length, :] = c_pos[:length]
+            traj_lens[pid * n_trajectories + i] = length
 
             mode_encoding[pid * n_trajectories + i, :] = torch.tensor(info[0])
             successes[pid * n_trajectories + i] = torch.tensor(info[1])
@@ -93,6 +119,8 @@ class Avoiding_Sim(BaseSim):
 
         mode_encoding = torch.zeros([self.n_trajectories, 9]).share_memory_()
         successes = torch.zeros(self.n_trajectories).share_memory_()
+        # actual (unpadded) length of each saved trajectory, for plotting
+        traj_lens = torch.zeros(self.n_trajectories).share_memory_()
 
         num_cpu = mp.cpu_count()
         cpu_set = list(range(num_cpu))
@@ -116,6 +144,7 @@ class Avoiding_Sim(BaseSim):
                         "mode_encoding": mode_encoding,
                         "successes": successes,
                         "robot_c_pos": robot_c_pos,
+                        "traj_lens": traj_lens,
                         "pid": i,
                         "cpu_set": set(cpu_set[i:i + 1])
                     },
@@ -126,9 +155,15 @@ class Avoiding_Sim(BaseSim):
             [p.join() for p in p_list]
 
         else:
-            self.eval_agent(agent, self.n_trajectories, mode_encoding, successes, robot_c_pos, 0, set([0]))
-            
-        # TODO: save robot_c_pos
+            self.eval_agent(agent, self.n_trajectories, mode_encoding, successes, robot_c_pos, traj_lens, 0, set([0]))
+
+        # Optionally dump the end-effector trajectories for cross-method plots.
+        if self.save_traj_dir is not None:
+            self._save_trajectories(robot_c_pos, mode_encoding, successes, traj_lens)
+
+        # Optionally render rollout videos for visual comparison.
+        if self.record_video_dir is not None and self.record_n_videos > 0:
+            self._record_videos(agent)
 
         success_rate = torch.mean(successes).item()
 
@@ -147,3 +182,62 @@ class Avoiding_Sim(BaseSim):
         print(f'entropy {entropy}')
 
         return successes, entropy
+
+    # ------------------------------------------------------------------
+    # Visualisation helpers
+    # ------------------------------------------------------------------
+    def _save_trajectories(self, robot_c_pos, mode_encoding, successes, traj_lens):
+        """Save per-rollout end-effector trajectories as <agent_name>_seed<seed>.npz.
+
+        ``scripts/plot_avoiding_trajectories.py`` consumes these files to draw a
+        side-by-side comparison of the methods over the obstacle field.
+        """
+        os.makedirs(self.save_traj_dir, exist_ok=True)
+        path = os.path.join(self.save_traj_dir, f"{self.agent_name}_seed{self.seed}.npz")
+        np.savez_compressed(
+            path,
+            c_pos=robot_c_pos.cpu().numpy(),        # (N, 251, 2), zero-padded
+            lengths=traj_lens.cpu().numpy().astype(np.int32),  # (N,) real lengths
+            modes=mode_encoding.cpu().numpy(),      # (N, 9) one-hot-ish mode id
+            successes=successes.cpu().numpy(),      # (N,)
+            agent_name=self.agent_name,
+            seed=self.seed,
+        )
+        log.info(f"Saved {robot_c_pos.shape[0]} trajectories to {path}")
+
+    def _record_videos(self, agent):
+        """Render a few rollouts offscreen (headless) into one .mp4 per method."""
+        # Rendering is pinned to EGL (see module top); enforce it again here so
+        # it holds even if the process environment was changed elsewhere.
+        os.environ["MUJOCO_GL"] = "egl"
+        import imageio
+
+        os.makedirs(self.record_video_dir, exist_ok=True)
+        path = os.path.join(self.record_video_dir, f"{self.agent_name}_seed{self.seed}.mp4")
+
+        env = ObstacleAvoidanceEnv(render=False)
+        env.start()
+        random.seed(self.seed)
+        torch.manual_seed(self.seed)
+        np.random.seed(self.seed)
+
+        sz = self.record_size
+        writer = imageio.get_writer(path, fps=30)
+        try:
+            for i in range(self.record_n_videos):
+                agent.reset()
+                obs = env.reset()
+                pred_action = env.robot_state()
+                fixed_z = pred_action[2:]
+                done = False
+                while not done:
+                    obs = np.concatenate((pred_action[:2], obs))
+                    pred_action = agent.predict(obs)
+                    pred_action = pred_action[0] + obs[:2]
+                    pred_action = np.concatenate((pred_action, fixed_z, [0, 1, 0, 0]), axis=0)
+                    obs, reward, done, info = env.step(pred_action)
+                    frame = env.bp_cam.get_image(width=sz, height=sz, depth=False)
+                    writer.append_data(np.asarray(frame, dtype=np.uint8))
+        finally:
+            writer.close()
+        log.info(f"Saved {self.record_n_videos} rollout video(s) to {path}")

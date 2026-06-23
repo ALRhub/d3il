@@ -1,0 +1,171 @@
+_target_: agents.ebm_torch_agent.EBM_Torch_Agent
+_recursive_: false
+
+# ---------------------------------------------------------------------------
+# Image-based (vision) EBM policy. The two cameras (agentview + in-hand) drive
+# the ml-networks conv encoders; the robot state drives the pos encoder. Same
+# two-phase design as the state agent (phase 1 generative DiT, phase 2 EBM).
+# Driven by run_vision.py (one epoch per train_vision_agent() call).
+# ---------------------------------------------------------------------------
+
+phase1:
+  _target_: agents.models.ebm_jax.config.EBMPolicyConfig
+  static_obs_shape: [3, 96, 96]
+  gripper_obs_shape: [3, 96, 96]
+  action_dim: ${action_dim}
+  policy_length: ${window_size}
+  obs_length: ${window_size}
+  phase: generative
+  policy:
+    _target_: agents.models.ebm_jax.config.DiTConfig
+    input_dim: ${action_dim}
+    cond_step: 0
+    horizon: ${window_size}
+    d_model: 128
+    nhead: 8
+    n_layers: 16
+    mlp_ratio: 4.0
+    use_cross_attention: false
+    learn_sigma: false
+    time_emb:
+      _target_: agents.models.ebm_jax.config.PosEmbConfig
+      vector: 128
+      scale: 1.0
+    cond_cfg:
+      _target_: ml_networks.MLPConfig
+      hidden_dim: 128
+      output_activation: Identity
+      n_layers: 1
+      linear_cfg:
+        _target_: ml_networks.LinearConfig
+        activation: Mish
+  framework_cfg:
+    _target_: agents.models.ebm_jax.config.FlowMatchingConfig
+    sigma: 0.1
+    is_stable: false
+    num_inference_steps: 10
+  ot_method: exact
+  sinkhorn_epsilon: 0.01
+  ema:
+    decay: 0.999
+  optimizer_cfg:
+    name: AdaBelief
+    lr: 0.0006
+    amsgrad: true
+
+phase2:
+  _target_: agents.models.ebm_jax.config.EBMPolicyConfig
+  static_obs_shape: [3, 96, 96]
+  gripper_obs_shape: [3, 96, 96]
+  action_dim: ${action_dim}
+  policy_length: ${window_size}
+  obs_length: ${window_size}
+  phase: ebm
+  policy:
+    _target_: agents.models.ebm_jax.config.DiTConfig
+    input_dim: ${action_dim}
+    cond_step: 0
+    horizon: ${window_size}
+    d_model: 128
+    nhead: 8
+    n_layers: 16
+    mlp_ratio: 4.0
+    use_cross_attention: false
+    learn_sigma: false
+    time_emb:
+      _target_: agents.models.ebm_jax.config.PosEmbConfig
+      vector: 128
+      scale: 1.0
+    cond_cfg:
+      _target_: ml_networks.MLPConfig
+      hidden_dim: 128
+      output_activation: Identity
+      n_layers: 1
+      linear_cfg:
+        _target_: ml_networks.LinearConfig
+        activation: Mish
+  framework_cfg:
+    _target_: agents.models.ebm_jax.config.FlowMatchingConfig
+    sigma: 0.1
+    is_stable: false
+    num_inference_steps: 10
+  ot_method: exact
+  sinkhorn_epsilon: 0.01
+  ema:
+    decay: 0.999
+  # --- EBM ---
+  ebm:
+    _target_: agents.models.ebm_jax.config.EBMConfig
+    # Transformer EBM over the obs/action sequence (best vapo setting).
+    # Auto-downgraded to "mlp" by the agent when window_size==1.
+    arch: transformer
+    pos_emb_on_qk: true
+    hidden_dim: 256
+    n_layers: 4
+    nhead: 8
+    mlp_ratio: 4.0
+    num_samples_k: 32
+    temperature: 0.5
+    inference_num_samples: 128
+    use_langevin: true
+    langevin_steps: 10
+    langevin_step_size: 0.2
+    ema_decay: 0.999
+    loss_type: infonce
+    infonce_num_negatives: 31
+    infonce_use_inbatch_inverted: true
+    infonce_negative_source: random
+    infonce_negative_warmup_steps: 1000
+    invert_num_steps: 20
+    optimizer_cfg:
+      name: AdaBelief
+      lr: 0.0002
+      amsgrad: true
+  # --- Observation encoders: two cameras + robot state ---
+  static_obs_dim: 128
+  gripper_obs_dim: 64
+  # Vision encoder matched to the other baselines: ResNet18Conv (BatchNorm ->
+  # GroupNorm) + SpatialSoftmax(num_kp=32) + Linear(64), per camera.
+  static_encoder:
+    _target_: agents.models.ebm_jax.config.ResNet18EncoderConfig
+    num_kp: 32
+    temperature: 1.0
+    feature_dim: 64
+    group_norm_divisor: 16
+    imagenet_norm: true
+  gripper_encoder:
+    _target_: agents.models.ebm_jax.config.ResNet18EncoderConfig
+    num_kp: 32
+    temperature: 1.0
+    feature_dim: 64
+    group_norm_divisor: 16
+    imagenet_norm: true
+  # robot state ("pos") encoder
+  pos_input_dim: ${obs_dim}
+  pos_obs_dim: 32
+  pos_encoder:
+    _target_: ml_networks.MLPConfig
+    hidden_dim: 128
+    output_activation: Mish
+    n_layers: 1
+    linear_cfg:
+      _target_: ml_networks.LinearConfig
+      activation: Mish
+
+# ---------------------------------------------------------------------------
+# Training / data
+# ---------------------------------------------------------------------------
+window_size: ${window_size}
+phase1_epochs: null
+phase2_epochs: null
+
+trainset: ${trainset}
+valset: ${valset}
+
+train_batch_size: ${train_batch_size}
+val_batch_size: ${val_batch_size}
+num_workers: ${num_workers}
+epoch: ${epoch}
+device: ${device}
+scale_data: ${scale_data}
+eval_every_n_epochs: ${eval_every_n_epochs}

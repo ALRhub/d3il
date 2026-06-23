@@ -22,7 +22,7 @@ phase1:
     horizon: ${window_size}
     d_model: 128
     nhead: 8
-    n_layers: 8
+    n_layers: 16
     mlp_ratio: 4.0
     use_cross_attention: false
     learn_sigma: false
@@ -50,6 +50,7 @@ phase1:
   optimizer_cfg:
     name: AdaBelief
     lr: 0.0006
+    amsgrad: true
 
 phase2:
   _target_: agents.models.ebm_jax.config.EBMPolicyConfig
@@ -67,7 +68,7 @@ phase2:
     horizon: ${window_size}
     d_model: 128
     nhead: 8
-    n_layers: 8
+    n_layers: 16
     mlp_ratio: 4.0
     use_cross_attention: false
     learn_sigma: false
@@ -95,20 +96,32 @@ phase2:
   # --- EBM ---
   ebm:
     _target_: agents.models.ebm_jax.config.EBMConfig
-    arch: mlp
+    # Transformer EBM over the obs/action sequence (best vapo setting).
+    # Auto-downgraded to "mlp" by the agent when window_size==1 (single-step:
+    # a transformer over length-1 sequences is unnecessary).
+    arch: transformer
+    pos_emb_on_qk: true
     hidden_dim: 256
     n_layers: 4
+    nhead: 8
+    mlp_ratio: 4.0
     num_samples_k: 32
-    temperature: 1.0
-    inference_num_samples: 256
-    use_langevin: false            # set true to match vapo's Langevin refinement
+    temperature: 0.5
+    inference_num_samples: 128
+    use_langevin: true
     langevin_steps: 10
-    langevin_step_size: 0.01
+    langevin_step_size: 0.2
     ema_decay: 0.999
-    loss_type: ce                  # 'ce' (vapo default) or 'infonce'
+    loss_type: infonce
+    infonce_num_negatives: 31
+    infonce_use_inbatch_inverted: true
+    infonce_negative_source: random
+    infonce_negative_warmup_steps: 1000
+    invert_num_steps: 20
     optimizer_cfg:
       name: AdaBelief
-      lr: 0.0003
+      lr: 0.0002
+      amsgrad: true
   # --- State ("pos") encoder: the D3IL observation conditions the EBM ---
   pos_input_dim: ${obs_dim}
   pos_obs_dim: 64

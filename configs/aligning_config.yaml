@@ -38,7 +38,7 @@ train_batch_size: 1024
 val_batch_size: 1024
 num_workers: 4
 device: 'cuda'
-epoch: 500
+epoch: 1000
 eval_every_n_epochs: 50
 scale_data: True
 

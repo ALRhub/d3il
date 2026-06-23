@@ -37,7 +37,7 @@ train_batch_size: 1024
 val_batch_size: 1024
 num_workers: 4
 device: 'cuda'
-epoch: 1
+epoch: 100
 eval_every_n_epochs: 1
 scale_data: True
 
@@ -72,3 +72,10 @@ simulation:
   render: False
   n_cores: 1
   n_trajectories: 100
+  # --- visual comparison hooks (disabled by default) ---
+  agent_name: ${agent_name}        # names saved artifacts per method
+  save_traj_dir: null              # e.g. viz/avoiding/traj : dump end-effector paths (.npz)
+  record_video_dir: null           # e.g. viz/avoiding/video : render rollout videos (.mp4)
+  record_n_videos: 0               # number of rollouts to record per run
+  record_backend: egl             # ignored: rendering is always forced to EGL
+  record_size: 480                 # rendered frame size (square)

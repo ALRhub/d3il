@@ -2,6 +2,13 @@ import logging
 import abc
 import os
 
+# Rendering must ALWAYS use the EGL offscreen backend (GPU, headless-safe).
+# base_sim is imported by every task simulator, so pinning it here guarantees
+# the backend is set before any MuJoCo render context is created -- it is never
+# auto-selected (the auto order tries GLFW first, which crashes without a
+# display) and never falls back to the slow OSMesa CPU renderer.
+os.environ["MUJOCO_GL"] = "egl"
+
 log = logging.getLogger(__name__)
 
 

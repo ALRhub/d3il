@@ -88,6 +88,20 @@ def main(cfg: DictConfig) -> None:
     env_sim = hydra.utils.instantiate(cfg.simulation)
     env_sim.test_agent(agent)
 
+    # Append evaluation metrics to the paper CSV (opt-in via PAPER_CSV env).
+    paper_csv = os.environ.get("PAPER_CSV")
+    if paper_csv and wandb.run is not None:
+        try:
+            from paper_utils import append_metrics
+            append_metrics(
+                paper_csv, task=task, modality=modality,
+                method=str(cfg.agent_name), seed=int(cfg.seed),
+                window_size=int(OmegaConf.select(cfg, "window_size", default=0) or 0),
+                summary=dict(wandb.run.summary),
+            )
+        except Exception as e:
+            log.warning("paper CSV append failed: %s", e)
+
     log.info("done")
 
     wandb.finish()

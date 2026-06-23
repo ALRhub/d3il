@@ -54,7 +54,7 @@ simulation:
   save_traj_dir: null         # 設定するとエンドエフェクタ軌道を .npz 保存
   record_video_dir: null      # 設定するとロールアウト動画を .mp4 保存
   record_n_videos: 0          # 記録するロールアウト本数（1 run あたり）
-  record_backend: osmesa      # MUJOCO_GL: osmesa(CPU, ヘッドレス安全) / egl(GPU)
+  record_backend: egl        # 無視されます: 描画は常に EGL に固定
   record_size: 480            # 描画フレームの一辺(px)
 ```
 
@@ -63,7 +63,7 @@ simulation:
 | `save_traj_dir` | `null` | 軌道 `.npz` の保存先。未指定なら保存しない |
 | `record_video_dir` | `null` | 動画 `.mp4` の保存先。未指定なら記録しない |
 | `record_n_videos` | `0` | 記録ロールアウト本数。`record_video_dir` 設定時のみ有効 |
-| `record_backend` | `osmesa` | オフスクリーン描画バックエンド。`osmesa`=CPU ソフトレンダ（モニタ無し環境で安全）、`egl`=GPU |
+| `record_backend` | `egl` | **無視されます**。描画は常に EGL(GPU・ヘッドレス安全)に固定されます |
 | `record_size` | `480` | 動画フレームの解像度（正方形） |
 
 > コマンドラインから `simulation.save_traj_dir=...` のように上書きできます（`--multirun` の全 seed に適用）。
@@ -110,9 +110,10 @@ python scripts/plot_avoiding_trajectories.py <traj_dir> -o out.png [--max-traj 8
 `record_n_videos` 本のロールアウトを実行し、env のケージカメラ (`bp_cam`) からフレームを取得して
 `<record_video_dir>/<agent_name>_seed<seed>.mp4` に書き出します。
 
-- **ヘッドレス描画**: `MUJOCO_GL` を `record_backend` に設定してオフスクリーン描画します。
-  - `osmesa`: CPU ソフトウェアレンダ。GPU/ディスプレイ不要で確実に動作（既定）。やや低速。
-  - `egl`: GPU の OpenGL を使用。高速だが GPU の GL ドライバ対応が必要。
+- **ヘッドレス描画**: 描画は常に **EGL** に固定されます(`simulation/avoiding_sim.py` がインポート時に
+  `MUJOCO_GL=egl` を設定)。EGL は GPU のオフスクリーン OpenGL を使い、ディスプレイ不要で高速です。
+  GLFW(ウィンドウ表示=ヘッドレスでクラッシュ)や OSMesa(CPU で低速)へのフォールバックは行いません。
+  `record_backend` を指定しても無視され、必ず EGL が使われます(EGL が使えない場合はフォールバックせずエラーになります)。
 - 評価本体（マルチプロセス）の成功率計算には影響しません。記録は軽量化のため少数本に留めることを推奨します。
 
 ### 横並び合成
@@ -142,4 +143,4 @@ group 別に手法を比較できます。
   他タスクへ広げる場合は各 `simulation/*_sim.py` に同様の `get_image` ループを追加してください。
 - このリポジトリの実行環境はヘッドレスです。`simulation.render` は `False`（=`RenderMode.BLIND`）のままにしてください
   （`True`/`HUMAN` は GLFW ウィンドウを開こうとしてクラッシュします）。動画はそれとは独立したオフスクリーン描画で取得します。
-- osmesa は CPU 描画のため、`record_n_videos` を大きくすると評価時間が伸びます。
+- 描画は EGL(GPU)で行われます。`record_n_videos` を大きくすると評価時間がそのぶん伸びます。

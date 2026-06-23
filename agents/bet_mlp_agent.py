@@ -220,7 +220,7 @@ class BetMLP_Agent(BaseAgent):
             file_path = os.path.join(weights_path, sv_name)
 
         with open(file_path, "rb") as f:
-            payload = torch.load(f, map_location=self.device)
+            payload = torch.load(f, map_location=self.device, weights_only=False)
 
         loaded_keys = []
         for k, v in payload.items():
